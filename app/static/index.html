@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QueueForge Dashboard</title>
+<style>
+  :root { --bg:#fff; --fg:#1b1f24; --muted:#59636e; --line:#d8dee4; --card:#f6f8fa; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#0f1318; --fg:#e6edf3; --muted:#9aa4af; --line:#2b333c; --card:#171d24; } }
+  body { margin:0; padding:20px; background:var(--bg); color:var(--fg); font:15px/1.45 system-ui, sans-serif; max-width:960px; margin-inline:auto; }
+  h1 { font-size:1.4rem; margin:0 0 4px; } p.sub { color:var(--muted); margin:0 0 16px; }
+  .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; margin-bottom:16px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:10px 12px; }
+  .card b { display:block; font-size:1.5rem; } .card span { color:var(--muted); font-size:.85rem; }
+  fieldset { border:1px solid var(--line); border-radius:8px; margin-bottom:16px; }
+  label { display:inline-block; margin:4px 10px 4px 0; font-size:.85rem; color:var(--muted); }
+  input, select, textarea, button { font:inherit; padding:5px 8px; border:1px solid var(--line); border-radius:6px; background:var(--bg); color:var(--fg); }
+  button { cursor:pointer; } textarea { width:100%; box-sizing:border-box; font-family:ui-monospace, monospace; }
+  .table-wrap { overflow-x:auto; } table { border-collapse:collapse; width:100%; font-size:.88rem; }
+  th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); white-space:nowrap; }
+  td.err { white-space:normal; max-width:280px; color:var(--muted); }
+  .s-queued{color:#9a6700}.s-running{color:#0969da}.s-succeeded{color:#1a7f37}.s-dead{color:#cf222e}
+  #msg { min-height:1.3em; color:var(--muted); }
+</style>
+</head>
+<body>
+<h1>QueueForge</h1>
+<p class="sub">Fault-tolerant job queue on PostgreSQL. Refreshes every 2 seconds.</p>
+
+<div class="cards" id="cards"></div>
+
+<fieldset>
+  <legend>Enqueue a job</legend>
+  <label>Type <select id="type"><option>echo</option><option>add</option><option>sleep</option><option>flaky</option><option>fail</option></select></label>
+  <label>Max attempts <input id="attempts" type="number" min="1" max="20" value="3" style="width:70px"></label>
+  <label>API key <input id="key" type="password" autocomplete="off" placeholder="if required"></label>
+  <textarea id="payload" rows="2">{"numbers": [1, 2, 3]}</textarea>
+  <p><button id="go">Enqueue</button> <button id="burst">Enqueue 20 flaky jobs</button> <span id="msg"></span></p>
+</fieldset>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>ID</th><th>Type</th><th>Status</th><th>Attempts</th><th>Last error</th><th></th></tr></thead>
+  <tbody id="rows"></tbody>
+</table>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const headers = () => { const h = {"Content-Type": "application/json"}; if ($("key").value) h["X-API-Key"] = $("key").value; return h; };
+
+async function post(url, body) {
+  const res = await fetch(url, {method: "POST", headers: headers(), body: body ? JSON.stringify(body) : undefined});
+  if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(res.status + " " + JSON.stringify(e.detail || e)); }
+  return res.json();
+}
+
+function cell(tr, text, cls) { const td = document.createElement("td"); td.textContent = text; if (cls) td.className = cls; tr.appendChild(td); return td; }
+
+async function refresh() {
+  try {
+    const [stats, list] = await Promise.all([fetch("/api/v1/stats").then(r => r.json()), fetch("/api/v1/jobs?limit=25").then(r => r.json())]);
+    const cards = $("cards"); cards.replaceChildren();
+    const items = [["queued", stats.counts.queued], ["running", stats.counts.running], ["succeeded", stats.counts.succeeded], ["dead", stats.counts.dead],
+                   ["done / last min", stats.succeeded_last_minute], ["oldest ready (s)", stats.oldest_ready_age_s == null ? "-" : stats.oldest_ready_age_s.toFixed(1)]];
+    for (const [label, value] of items) {
+      const d = document.createElement("div"); d.className = "card";
+      const b = document.createElement("b"); b.textContent = value; const s = document.createElement("span"); s.textContent = label;
+      d.append(b, s); cards.appendChild(d);
+    }
+    const rows = $("rows"); rows.replaceChildren();
+    for (const j of list) {
+      const tr = document.createElement("tr");
+      cell(tr, j.id); cell(tr, j.type); cell(tr, j.status, "s-" + j.status); cell(tr, j.attempts + "/" + j.max_attempts); cell(tr, j.last_error || "", "err");
+      const td = document.createElement("td");
+      if (j.status === "dead") {
+        const btn = document.createElement("button"); btn.textContent = "Retry";
+        btn.onclick = async () => { try { await post("/api/v1/jobs/" + j.id + "/retry"); refresh(); } catch (e) { $("msg").textContent = e.message; } };
+        td.appendChild(btn);
+      }
+      tr.appendChild(td); rows.appendChild(tr);
+    }
+  } catch (e) { $("msg").textContent = "refresh failed: " + e.message; }
+}
+
+$("go").onclick = async () => {
+  try {
+    const payload = JSON.parse($("payload").value || "{}");
+    const job = await post("/api/v1/jobs", {type: $("type").value, payload, max_attempts: Number($("attempts").value)});
+    $("msg").textContent = "queued job " + job.id; refresh();
+  } catch (e) { $("msg").textContent = e.message; }
+};
+$("burst").onclick = async () => {
+  try { for (let i = 0; i < 20; i++) await post("/api/v1/jobs", {type: "flaky", payload: {fail_rate: 0.6}, max_attempts: 4}); $("msg").textContent = "queued 20 flaky jobs"; refresh(); }
+  catch (e) { $("msg").textContent = e.message; }
+};
+refresh(); setInterval(refresh, 2000);
+</script>
+</body>
+</html>
