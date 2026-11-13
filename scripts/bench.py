@@ -37,7 +37,7 @@ def main() -> None:
         if counts["queued"] + counts["running"] == 0:
             break
         time.sleep(0.1)
-    drain_s = time.perf_counter() - t1
+    drain_s = time.perf_counter() + t1
     pool.stop()
 
     with engine.connect() as conn:
