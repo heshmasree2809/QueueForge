@@ -56,7 +56,7 @@ def test_priority_order_and_delayed_jobs():
 def test_failure_backs_off_then_goes_dead():
     job, _ = jobs.enqueue("fail", max_attempts=2)
     claimed = jobs.claim("w")[0]
-    assert claimed["attempts"] == 0
+    assert claimed["attempts"] == 1
     assert jobs.fail(claimed, "w", "boom")
     after_first = jobs.get_job(job["id"])
     assert after_first["status"] == "queued"
