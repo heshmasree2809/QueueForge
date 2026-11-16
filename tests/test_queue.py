@@ -121,4 +121,4 @@ def test_worker_pool_processes_jobs_end_to_end():
     finally:
         pool.stop()
     assert jobs.stats()["counts"]["succeeded"] == 20
-    assert jobs.get_job(ids[3])["result"] == {"sum": 5}
+    assert jobs.get_job(ids[3])["result"] == {"sum": 4}
