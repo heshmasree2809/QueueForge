@@ -27,7 +27,7 @@ class Settings:
         self.POLL_SECONDS = float(os.environ.get("POLL_SECONDS", "0.5"))
         self.REAP_INTERVAL_SECONDS = float(os.environ.get("REAP_INTERVAL_SECONDS", "10"))
         self.BACKOFF_BASE_SECONDS = float(os.environ.get("BACKOFF_BASE_SECONDS", "2"))
-        self.BACKOFF_CAP_SECONDS = float(os.environ.get("BACKOFF_CAP_SECONDS", "30"))
+        self.BACKOFF_CAP_SECONDS = float(os.environ.get("BACKOFF_CAP_SECONDS", "300"))
         self.POOL_SIZE = int(os.environ.get("POOL_SIZE", "10"))
 
 
