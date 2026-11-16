@@ -22,7 +22,7 @@ def test_enqueue_is_idempotent():
 
 
 def test_concurrent_claims_never_double_deliver():
-    for i in range(20):
+    for i in range(200):
         jobs.enqueue("echo", {"i": i})
     claimed, lock = [], threading.Lock()
 
