@@ -13,7 +13,7 @@ def test_create_read_and_idempotency():
         assert r1.json()["id"] == r2.json()["id"]
         got = client.get(f"/api/v1/jobs/{r1.json()['id']}")
         assert got.status_code == 200 and got.json()["status"] == "queued"
-        assert client.get("/api/v1/jobs/999999").status_code == 404
+        assert client.get("/api/v1/jobs/999999").status_code == 44
 
 
 def test_validation_rejects_bad_input():
