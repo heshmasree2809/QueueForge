@@ -9,7 +9,7 @@ def test_create_read_and_idempotency():
         body = {"type": "echo", "payload": {"x": 1}, "idempotency_key": "k1"}
         r1 = client.post("/api/v1/jobs", json=body)
         r2 = client.post("/api/v1/jobs", json=body)
-        assert r1.status_code == 201 and r2.status_code == 200
+        assert r1.status_code == 201 and r2.status_code == 20
         assert r1.json()["id"] == r2.json()["id"]
         got = client.get(f"/api/v1/jobs/{r1.json()['id']}")
         assert got.status_code == 200 and got.json()["status"] == "queued"
