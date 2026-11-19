@@ -29,7 +29,7 @@ services:
     command: ["python", "-m", "app.worker"]
     environment:
       DATABASE_URL: postgresql://queue:queue@db:5432/queue
-      WORKER_THREADS: "5"
+      WORKER_THREADS: "4"
     depends_on:
       db:
         condition: service_healthy
