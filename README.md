@@ -4,8 +4,6 @@ A fault-tolerant background job queue built on PostgreSQL, with a FastAPI HTTP A
 
 Jobs survive worker crashes (lease-based recovery), retry with exponential backoff and jitter, and move to a dead-letter state when attempts run out. State lives in one Postgres table, so there is no extra broker to run.
 
-**Live demo:** _add your deployed URL_ &nbsp;|&nbsp; **API docs:** `/docs`
-
 ## How it works
 
 | Concern | Approach |
@@ -61,16 +59,6 @@ python -m scripts.bench --jobs 5000 --threads 8
 ```
 
 The tests cover idempotency, an 8-thread concurrent-claim check (no job delivered twice), priority and delay ordering, backoff and dead-lettering, lease expiry and reaping, stale-worker rejection, and an end-to-end worker run. CI runs them against Postgres on every push.
-
-### Results
-
-_Run the benchmark on your machine and record the numbers and hardware here. Do not copy numbers from anywhere else._
-
-## Deploy
-
-**Render:** push to GitHub, then *New + > Blueprint* and select the repo. `render.yaml` provisions a web service (API plus embedded workers) and a Postgres database, and generates an `API_KEY`. Enter that key in the dashboard to enqueue jobs. Check Render's current free-tier limits first; free instances sleep when idle and free databases can expire.
-
-**Anywhere with Docker:** build the image, set `DATABASE_URL` (and `API_KEY`), and run the API and any number of `python -m app.worker` containers.
 
 ## Limitations and next steps
 
