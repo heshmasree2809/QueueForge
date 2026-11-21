@@ -14,7 +14,7 @@ from sqlalchemy import text  # noqa: E402
 from app.db import engine, init_db  # noqa: E402
 
 
-@pytest.fixture(autouse=False)
+@pytest.fixture(autouse=True)
 def clean_db():
     init_db()
     with engine.begin() as conn:
