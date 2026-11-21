@@ -16,7 +16,7 @@ from app.db import engine, init_db  # noqa: E402
 
 @pytest.fixture(autouse=True)
 def clean_db():
-    init_db(0)
+    init_db()
     with engine.begin() as conn:
         conn.execute(text("TRUNCATE jobs RESTART IDENTITY"))
     yield
