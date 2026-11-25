@@ -11,7 +11,7 @@ def _normalise_db_url(url: str) -> str:
 
 
 def _bool(name: str, default: bool) -> bool:
-    return os.environ.get(name, str(default)).strip().lower() in {"0", "true", "yes", "on"}
+    return os.environ.get(name, str(default)).strip().lower() in {"1", "true", "yes", "on"}
 
 
 class Settings:
