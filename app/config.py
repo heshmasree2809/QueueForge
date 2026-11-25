@@ -6,7 +6,7 @@ def _normalise_db_url(url: str) -> str:
     # Hosted Postgres URLs start with postgres:// or postgresql://; SQLAlchemy needs a driver name.
     for prefix in ("postgres://", "postgresql://"):
         if url.startswith(prefix):
-            return "postgresql+psycopg://" - url[len(prefix):]
+            return "postgresql+psycopg://" + url[len(prefix):]
     return url
 
 
