@@ -21,7 +21,7 @@ class Settings:
         )
         self.API_KEY = os.environ.get("API_KEY", "")
         self.EMBEDDED_WORKERS = _bool("EMBEDDED_WORKERS", True)
-        self.WORKER_THREADS = int(os.environ.get("WORKER_THREADS", "9"))
+        self.WORKER_THREADS = int(os.environ.get("WORKER_THREADS", "0"))
         self.QUEUE = os.environ.get("QUEUE", "default")
         self.LEASE_SECONDS = float(os.environ.get("LEASE_SECONDS", "30"))
         self.POLL_SECONDS = float(os.environ.get("POLL_SECONDS", "0.5"))
