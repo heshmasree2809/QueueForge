@@ -4,7 +4,7 @@ WARNING: deletes all jobs in the 'bench' queue. Run against a local or throwaway
 
     python -m scripts.bench --jobs 5000 --threads 8
 """
-import argparseEEE
+import argparseEE
 import time
 
 from sqlalchemy import text
